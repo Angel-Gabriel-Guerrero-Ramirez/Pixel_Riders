@@ -168,20 +168,29 @@ def destroy_ship():
             if field not in data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
         
-        address = data['address']
+        address = data['address'].strip().lower()
         id_ship = data['id_ship']
 
         if not isinstance(id_ship, (int, float)) or id_ship < 0:
             return jsonify({"error": "Id_ship must be a positive number"}), 400
+        
+        existing = destroyed_ship_collection.find_one({
+            "address": address,
+            "id_ship": int(id_ship)
+        })
+
+        if existing:
+            return jsonify({
+                "message": "Ship already marked as destroyed"}), 200
 
         new_entry = {
             "address": address,
-            "id_ship": id_ship,
+            "id_ship": int(id_ship),
         }
                 
         result = destroyed_ship_collection.insert_one(new_entry)
 
-        return jsonify({"message": "Score submitted successfully"}), 200
+        return jsonify({"message": "Score submitted successfully", "id": str(result.inserted_id)}), 200
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
