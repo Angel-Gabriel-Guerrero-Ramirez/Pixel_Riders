@@ -16,6 +16,7 @@ DB_NAME = os.getenv('DB_NAME')
 client = MongoClient(MONGODB_URI)
 db = client[DB_NAME]
 leaderboard_collection = db['leaderboard']
+destroyed_ship_collection = db['destroyed_ships']
 
 @app.route('/generate_visual', methods=['GET'])
 def generate_visual():
@@ -157,6 +158,45 @@ def submit_score():
                 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/destroy_ship', methods=['POST'])
+def destroy_ship():
+    try:
+        data = request.get_json()
+        required_fields = ['address', 'id_ship']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+        
+        address = data['address']
+        id_ship = data['id_ship']
+
+        if not isinstance(id_ship, (int, float)) or id_ship < 0:
+            return jsonify({"error": "Id_ship must be a positive number"}), 400
+
+        new_entry = {
+            "address": address,
+            "id_ship": id_ship,
+        }
+                
+        result = destroyed_ship_collection.insert_one(new_entry)
+
+        return jsonify({"message": "Score submitted successfully"}), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/user/<address>/ships_destroyed', methods=['GET'])
+def ships_destroyed(address):
+    
+    res = list(destroyed_ship_collection.find({
+        "address": address
+    }))
+
+    for item in res:
+        item['_id'] = str(item['_id'])
+
+    return jsonify(res), 200
 
 if __name__ == '__main__':
     port = int(os.getenv("PORT", 5000))
