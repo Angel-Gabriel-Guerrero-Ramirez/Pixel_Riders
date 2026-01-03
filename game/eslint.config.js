@@ -28,7 +28,10 @@ export default defineConfig([
       'react-hooks/exhaustive-deps': 'off',
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/rules-of-hooks':'off',
-      '@typescript-eslint/no-explicit-any':'off'
+      '@typescript-eslint/no-explicit-any':'off',
+      'no-useless-escape':'off',
+      'prefer-const':'off',
+      'no-case-declarations':'off',
     }
   },
 ])

@@ -11,7 +11,6 @@ interface MainMenuProps {
   saveData: SaveData;
 }
 
-
 const MainMenu: React.FC<MainMenuProps> = ({ 
   onStartFree, 
   onStartCompetitive, 
@@ -21,6 +20,7 @@ const MainMenu: React.FC<MainMenuProps> = ({
   
 }) => {
   const { connect, disconnect, account, connected } = useWallet();
+  
   const shortenAddress = (addr?: string) => {
     if (!addr) return "";
     return `${addr.slice(0, 4)}...${addr.slice(-2)}`;
@@ -33,7 +33,7 @@ const MainMenu: React.FC<MainMenuProps> = ({
         <div className="text-center mt-4">
             {/* Titulo */}
             <h1 className="text-5xl md:text-6xl font-black mb-1 text-transparent bg-clip-text bg-gradient-to-b from-cyan-400 to-blue-600 pixel-font tracking-tighter">
-                NEON VOID
+                PIXEL RIDERS
             </h1>
             {/* Subtitulo */}
             <p className="text-xl text-blue-200 tracking-widest uppercase mb-4">Endless Assault</p>
@@ -54,11 +54,6 @@ const MainMenu: React.FC<MainMenuProps> = ({
                       Disconnect
                     </button>
                 </div>
-
-                <div className="flex flex-col items-end">
-                    <span className="text-gray-400">Pool</span>
-                    <span className="text-yellow-400 font-bold">ETH</span>
-                 </div>
 
               </div>
             ):(
@@ -124,7 +119,7 @@ const MainMenu: React.FC<MainMenuProps> = ({
             </div>
         </div>
 
-        {/* Stats Footer */}
+        {/* Stats Footer*/}
         <div className="bg-gray-900/80 p-4 rounded-lg border border-gray-700 w-full max-w-xs text-xs">
             <h3 className="text-gray-400 uppercase mb-2 font-bold tracking-widest flex justify-between">
               Career Stats

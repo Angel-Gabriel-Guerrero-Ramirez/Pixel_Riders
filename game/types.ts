@@ -11,14 +11,44 @@ export enum GameMode {
   COMPETITIVE = 'COMPETITIVE'
 }
 
-export interface ShipNFT {
-  objectId: string;
+export enum CheckpointAction {
+  CONTINUE = 'CONTINUE',
+  SAVE_AND_QUIT = 'SAVE_AND_QUIT'
+}
+export interface CheckpointData {
+  score: number;
+  combo: number;
+  health: number;
+  time: number;
+  difficulty: number;
+  activeEvent: EventType;
+  coinsCollected: number;
+  checkpointTime: number; // Tiempo específico del checkpoint (ej: 300, 600, 900 segundos)
+}
+
+export interface CheckpointStats {
+  reachedCheckpoint: boolean;
+  checkpointTime: number;
+  canContinue: boolean;
+}
+
+export interface CheckpointResult {
+  action: CheckpointAction;
+  score?: number;
+  combo?: number;
+  checkpointTime?: number;
+}
+
+export interface HangarShip {
+  tokenId: number;
+  owner: string;
   spriteId: number;
   colorBase: Array<number>;
   colorShadow: Array<number>;
   life: number;
   attack: number;
-  status: 'ALIVE' | 'DESTROYED' | 'TRADE';
+  status: string;
+  spriteDataUrl?: string;
 }
 
 export interface ShipConfig {
@@ -46,7 +76,6 @@ export enum EventType {
 }
 
 export enum PowerUpType {
-  HEALTH = 'HEALTH',
   SHIELD = 'SHIELD',
   TRIPLE_SHOT = 'TRIPLE_SHOT',
   NUKE = 'NUKE',
@@ -69,4 +98,13 @@ export interface GameStats {
   difficulty: number; // 1-5 stars
   activeEvent: EventType;
   coinsCollected: number;
+}
+
+export interface LeaderboardStats  {
+  rank: number;
+  address: string;
+  score: number;
+  combo: number;
+  timestamp: string;
+  game_mode: 'FREE' | 'COMPETITIVE';
 }

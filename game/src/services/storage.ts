@@ -18,8 +18,3 @@ export const getSaveData = (): SaveData => {
 export const saveGameData = (data: SaveData) => {
   localStorage.setItem(KEY, JSON.stringify(data));
 };
-/*
-//Condiciones de desbloqueo
-export const checkUnlocks = (currentData: SaveData, stats: { time: number, kills: number, combo: number, difficulty: number }) => {
-  const newUnlocks: string[] = [];
-};*/

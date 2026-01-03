@@ -1,5 +1,5 @@
 [package]
-name = "pixel_riders"
+name = "pixel_rider_ships"
 version = "1.0.0"
 authors = []
 
@@ -7,7 +7,6 @@ authors = []
 game = "_"
 
 [dev-addresses]
-
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-framework.git"
