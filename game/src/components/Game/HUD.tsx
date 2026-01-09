@@ -6,13 +6,25 @@ import barlife_fullsegment from '../../assets/sprites/barLife/barLife_fullsegmen
 import barlife_fullend from '../../assets/sprites/barLife/barLife_fullend.png';
 import barlife_emptysegment from '../../assets/sprites/barLife/barLife_emptysegment.png';
 import barlife_emptyend from '../../assets/sprites/barLife/barLife_emptyend.png'
-
+import styles from '../../styles/gameStyle.module.css'
 // Interfaz dentro del juego
 
 interface HUDProps {
   stats: GameStats;
   maxHealth?: number
 }
+
+const getMultiplierColor = (multiplier: number): string => {
+  switch(multiplier) {
+    case 1: return 'text-cyan-400'; // Azul
+    case 2: return 'text-purple-500'; // Morado
+    case 3: return 'text-red-500'; // Rojo
+    case 4: return 'text-orange-500'; // Naranja
+    case 5: return 'text-yellow-400'; // Dorado
+    default: return 'text-cyan-400';
+  }
+};
+
 
 const LifeBar: React.FC<{ current: number; max: number }> = ({ current, max }) => {
   return (
@@ -45,6 +57,85 @@ const LifeBar: React.FC<{ current: number; max: number }> = ({ current, max }) =
   );
 };
 
+const MultiplierProgressBar: React.FC<{ 
+  current: number;
+  multiplier: number;
+  nextThreshold?: number | null;
+}> = ({ current, multiplier }) => {
+
+  // Función para obtener el color de fondo del progreso:
+  const getProgressBarColor = (multiplier: number): string => {
+    switch(multiplier) {
+      case 1: return 'bg-cyan-500';
+      case 2: return 'bg-purple-500';
+      case 3: return 'bg-red-500';
+      case 4: return 'bg-orange-500';
+      case 5: return 'bg-yellow-500';
+      default: return 'bg-cyan-500';
+    }
+  };
+  
+  const getCurrentRange = (mult: number): { start: number, end: number | null } => {
+    switch(mult) {
+      case 1: return { start: 0, end: 25 };
+      case 2: return { start: 25, end: 55 };
+      case 3: return { start: 55, end: 100 };
+      case 4: return { start: 100, end: 150 };
+      case 5: return { start: 150, end: null }; // Máximo alcanzado
+      default: return { start: 0, end: 25 };
+    }
+  };
+  
+  const range = getCurrentRange(multiplier);
+  
+  // Calcular progreso dentro del rango actual
+  let progressPercentage;
+  let currentInRange;
+  let totalInRange;
+  
+  if (multiplier === 5) {
+    // Para x5, mostrar siempre 100% (máximo)
+    progressPercentage = 100;
+    currentInRange = 0;
+    totalInRange = 0;
+  } else if (range.end !== null) {
+    // Progreso relativo al rango actual (0 a 100%)
+    currentInRange = Math.min(Math.max(current - range.start, 0), range.end - range.start);
+    totalInRange = range.end - range.start;
+    progressPercentage = Math.min(100, (currentInRange / totalInRange) * 100);
+  } else {
+    progressPercentage = 0;
+    currentInRange = 0;
+    totalInRange = 0;
+  }
+
+  const isFull = multiplier < 5 && currentInRange >= totalInRange;
+  
+  const getProgressText = () => {
+    if (multiplier === 5) {
+      return "MAX";
+    } else if (isFull) {
+      return "LEVEL UP!";
+    }
+  };
+  
+  return (
+    <div className="w-full w-[100px]">
+      <div className="flex justify-between text-xs mb-1">
+        <span className={`font-bold ${getMultiplierColor(multiplier)}`}>
+          {getProgressText()}
+        </span>
+      </div>
+      <div className="h-2 bg-gray-800 overflow-hidden">
+        <div 
+          className={`h-full ${getProgressBarColor(multiplier)}`}
+          style={{ width: `${progressPercentage}%` }}
+        />
+      </div>
+    </div>
+  );
+}; 
+
 const HUD: React.FC<HUDProps> = ({ stats, maxHealth = 3}) => {
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -58,17 +149,17 @@ const HUD: React.FC<HUDProps> = ({ stats, maxHealth = 3}) => {
       <div className="flex justify-between items-start">
         {/* Score y monedas*/}
         <div className="flex flex-col gap-1">
-          <div className="text-3xl font-bold text-white pixel-font glow-text">
+          <div className={`${styles.pixelFont} text-[25px] text-3xl font-bold text-white glow-text`}>
             {stats.score.toLocaleString()}
           </div>
           <div className="flex items-center gap-1 text-yellow-400">
-             <span className="text-sm font-bold">COINS: {stats.coinsCollected}</span>
+             <span className={`${styles.pixelFont} text-[15px] font-bold`}>COINS: {stats.coinsCollected}</span>
           </div>
         </div>
 
         {/* Tiempo transcurrido y dificultad*/}
         <div className="flex flex-col items-end gap-1">
-          <div className="text-2xl font-mono text-cyan-400 font-bold">
+          <div className={`${styles.pixelFont} text-2xl font-mono text-cyan-400 font-bold `}>
             {formatTime(stats.time)}
           </div>
           <div className="flex gap-1">
@@ -80,52 +171,63 @@ const HUD: React.FC<HUDProps> = ({ stats, maxHealth = 3}) => {
               />
             ))}
           </div>
+          <div className="flex gap-1">
+            {/* Combo Indicator */}
+            <div className={`${styles.pixelFont} text-3xl font-black text-transparent bg-clip-text bg-purple-600`}>
+              {stats.combo}x
+            </div>
+          </div>
+          {/* Mutiplicador */}
+          <div className='flex gap-1'>
+            {stats.scoreMultiplier > 1 ? (
+            <div className="flex flex-col items-end gap-1">
+                <div className="flex flex-col items-end">
+                  <span className={`${styles.pixelFont} text-[15px] text-gray-400`}>Multiplier</span>
+                  <span className={`${styles.pixelFont} text-[40px] text-3xl font-bold ${getMultiplierColor(stats.scoreMultiplier)}`}>
+                    x{stats.scoreMultiplier}
+                  </span>
+                </div>
+                <MultiplierProgressBar 
+                  current={stats.multiplierProgress || 0} 
+                  multiplier={stats.scoreMultiplier}
+                  nextThreshold={stats.nextMultiplierThreshold}
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-end">
+                <span className={`${styles.pixelFont} text-[15px] text-gray-400`}>Multiplier</span>
+                <span className={`${styles.pixelFont} text-[30px] text-3xl font-bold ${getMultiplierColor(1)}`}>
+                  x1
+                </span>
+                <div>
+                  <MultiplierProgressBar 
+                    current={stats.multiplierProgress || 0} 
+                    multiplier={1}
+                    nextThreshold={25}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Centro (eventos) */}
       {stats.activeEvent !== EventType.NONE && (
         <div className="absolute top-24 left-1/2 -translate-x-1/2 w-full text-center">
-             <div className="animate-pulse text-red-500 font-black text-2xl bg-black/50 p-2 rounded neon-border">
+             <div className={`${styles.pixelFont} animate-pulse text-red-500 font-black text-2xl bg-black/50 p-2 rounded neon-border`}>
                 WARNING: {stats.activeEvent}
-             </div>
-        </div>
-      )}
-
-      {/* Combo Indicator - Centro */}
-      {stats.combo > 5 && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-50">
-             <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-t from-purple-600 to-pink-500 italic">
-                {stats.combo}x
              </div>
         </div>
       )}
 
       {/* Barra inferior */}
       <div className="flex justify-between items-end mt-auto">
-        {/* Vida
-        <div className="flex flex-col items-end min-w-0 ml-2">
-            {[...Array(maxHealth)].map((_, i) => (
-                <Heart 
-                    key={i} 
-                    className={`${i < stats.health ? "fill-red-500 text-red-500 animate-pulse" : "text-gray-800"}`} 
-                    size={32}
-                />
-            ))}
-        </div> */}
+        {/* Vida */}
         <div className="flex flex-col items-end min-w-0 ml-2">
           <LifeBar current={stats.health} max={maxHealth} />
         </div>
         
-        {/* Combo inferior */}
-        {stats.combo > 0 && (
-            <div className="flex flex-col items-end">
-                <span className="text-sm text-gray-400">COMBO</span>
-                <span className={`text-4xl font-bold ${stats.combo > 20 ? 'text-purple-400' : 'text-blue-400'}`}>
-                    x{stats.combo}
-                </span>
-            </div>
-        )}
       </div>
     </div>
   );

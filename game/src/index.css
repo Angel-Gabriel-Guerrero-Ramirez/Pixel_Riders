@@ -3,6 +3,13 @@ h1 {
   line-height: 1.1;
 }
 /* En tu archivo CSS global */
+@font-face {
+  font-family: 'Pixel';
+  src: url('/game/public/fonts/Silkscreen/slkscr.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
 
 @keyframes slideInUp {
   from {

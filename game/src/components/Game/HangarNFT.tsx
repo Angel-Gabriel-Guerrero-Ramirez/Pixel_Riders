@@ -2,9 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 import { useWallet, InputTransactionData } from "@aptos-labs/wallet-adapter-react";
 import { HangarShip } from '../../../types';
-import { ChevronLeft, Plus, RotateCw, AlertTriangle, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { RotateCw, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import playerSprite0 from '../../assets/sprites/player/sprite_0.png';
 import playerSprite1 from '../../assets/sprites/player/sprite_1.png';
+
+import SpriteButton from '../ui/spriteButton';
+import cardBackground from '../../assets/sprites/hangar/card_sprite.png';
+import lifeTextSprite from '../../assets/sprites/hangar/lifeTextSprite.png';
+import attackTextSprite from '../../assets/sprites/hangar/attackTextSprite.png';
+import statSprite1 from '../../assets/sprites/hangar/stat1.png';
+import statSprite2 from '../../assets/sprites/hangar/stat2.png';
+import statSprite3 from '../../assets/sprites/hangar/stat3.png';
+import statSprite4 from '../../assets/sprites/hangar/stat4.png';
+import statSprite5 from '../../assets/sprites/hangar/stat5.png';
+import btnbackPressed from '../../assets/images/goBackPressed.png';
+import btnback from '../../assets/images/GO BACK.png';
+import btnNewShip from '../../assets/images/btn_new_ship.png';
+import btnNewShipPressed from '../../assets/images/btn_new_shipPressed.png';
+import btnCreateCollection from '../../assets/images/createCollection.png';
+import btnCreateCollectionPressed from '../../assets/images/Create_collectionPressed.png';
+import styles from '../../styles/gameStyle.module.css';
+
 import { useActiveShips } from '../../hooks/useActiveShips';
 
 const localSpriteCache = new Map<string, string>();
@@ -75,6 +93,14 @@ const recolorSpriteLocal = async (
     console.error('Error recoloring sprite:', error);
     return baseSpriteUrl; // Fallback a sprite original
   }
+};
+
+const getStatSprite = (value: number): string => {
+  if (value >= 5) return statSprite5;
+  if (value >= 4) return statSprite4;
+  if (value >= 3) return statSprite3;
+  if (value >= 2) return statSprite2;
+  return statSprite1; // Valor mínimo es 1
 };
 
 interface HangarProps {
@@ -291,7 +317,7 @@ const HangarNFT: React.FC<HangarProps> = ({ onSelectShip, onBack, selectedShipId
         key={`${ship.tokenId}`}
         onClick={() => handleSelectShip(ship)}
         className={`
-          relative p-4 rounded-xl border-2 transition-all cursor-pointer
+          relative w-[144px] h-[240px] mx-auto transition-all cursor-pointer
           transform hover:-translate-y-1 hover:shadow-xl
           ${isSelected 
             ? 'border-cyan-500 bg-cyan-900/30' 
@@ -299,59 +325,87 @@ const HangarNFT: React.FC<HangarProps> = ({ onSelectShip, onBack, selectedShipId
           }
         `}
       >
+        <div className="absolute inset-0 w-full h-full transform scale-140 origin-center">
+          <img 
+            src={cardBackground}
+            alt="Card Background"
+            className="w-full h-full object-cover"
+            style={{ imageRendering: 'pixelated' }}
+          />
+        </div>
 
-        {isSelected && (
-          <div className="absolute -top-2 -right-2">
-            <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center">
-              <CheckCircle size={14} className="text-white" />
-            </div>
-          </div>
-        )}
-
-        {/* Sprite */}
-        <div className="relative w-24 h-24 mb-3 mx-auto">
-          {loadingSprite ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
-            </div>
-          ) : spriteUrl ? (
-            <img 
-              src={spriteUrl}
-              alt={`Ship Sprite ${ship.spriteId}`}
-              className="w-full h-full object-contain"
-              style={{ imageRendering: 'pixelated' }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-500">
-              No sprite
+        {/* Contenido del card */}
+        <div className="relative z-10 flex flex-col items-center justify-between h-full p-4">
+          
+          {isSelected && (
+            <div className="absolute -inset-2 border-4 border-orange-500 pointer-events-none z-10">
+              <div className="absolute inset-0 bg-orange-500/10 animate-pulse"></div>
             </div>
           )}
-        </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="flex items-center gap-2 p-3 bg-gray-900/60 rounded-lg">
-            <div>
-              <div className="text-xs text-gray-400">Life</div>
-              <div className="text-white font-bold text-lg">{ship.life}</div>
-            </div>
+          {/* Sprite */}
+          <div className="mt-4">
+            {loadingSprite ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-500"></div>
+              </div>
+            ) : spriteUrl ? (
+              <img 
+                src={spriteUrl}
+                alt={`Ship Sprite ${ship.spriteId}`}
+                className="w-14 h-14 object-contain mx-auto"
+                style={{ imageRendering: 'pixelated' }}
+              />
+            ) : (
+              <div className="w-20 h-20 flex items-center justify-center text-gray-500">
+                No sprite
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-2 p-3 bg-gray-900/60 rounded-lg">
-            <div>
-              <div className="text-xs text-gray-400">Attack</div>
-              <div className="text-white font-bold text-lg">{ship.attack}</div>
+
+          {/* Stats */}
+          <div className="flex flex-col items-center space-y-3 w-full">
+            {/* Life */}
+            <div className="flex justify-center">
+              <img 
+                src={lifeTextSprite}
+                alt="Life"
+                className="w-[96px] h-[18px] object-contain"
+                style={{ imageRendering: 'pixelated' }}
+              />
+            </div>
+            
+            {/* Life Stat */}
+            <div className="flex justify-center">
+              <img 
+                src={getStatSprite(ship.life)}
+                alt={`Life ${ship.life}`}
+                className="w-[75px] h-[24px] object-contain"
+                style={{ imageRendering: 'pixelated' }}
+              />
+            </div>
+            
+            {/* Attack Text */}
+            <div className="flex justify-center">
+              <img 
+                src={attackTextSprite}
+                alt="Attack"
+                className="w-[96px] h-[18px] object-contain"
+                style={{ imageRendering: 'pixelated' }}
+              />
+            </div>
+            
+            {/* Attack Stat */}
+            <div className="flex justify-center">
+              <img 
+                src={getStatSprite(ship.attack)}
+                alt={`Attack ${ship.attack}`}
+                className="w-[75px] h-[24px] object-contain"
+                style={{ imageRendering: 'pixelated' }}
+              />
             </div>
           </div>
         </div>
-
-        {/* Boton de seleccion */}
-        {ship.status === 'ALIVE' && (
-          <div className="mt-2">
-            <div className="text-center py-2 bg-gradient-to-r from-cyan-900/30 to-blue-900/30 rounded-lg border border-cyan-500/30">
-              <span className="text-cyan-300 font-bold">Select to play</span>
-            </div>
-          </div>
-        )}
       </div>
     );
   };
@@ -360,10 +414,17 @@ const HangarNFT: React.FC<HangarProps> = ({ onSelectShip, onBack, selectedShipId
       <div className="flex flex-col h-full w-full bg-gray-900 text-white overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-gray-700 flex items-center justify-between bg-black">
-          <button onClick={onBack} className="p-2 hover:bg-gray-800 rounded-full">
-            <ChevronLeft />
-          </button>
-          <h2 className="text-2xl font-bold pixel-font">HANGAR</h2>
+          <SpriteButton
+            normalSprite={btnback}
+            pressedSprite={btnbackPressed}
+            onClick={onBack}
+            width={48}
+            height={48}
+            altText="Back"
+          />
+          
+          <h2 className={`text-2xl font-bold ${styles.pixelFont}`}>HANGAR</h2>
+          
           <button 
             onClick={() => refresh()}
             className="p-2 hover:bg-gray-800 rounded-full"
@@ -378,12 +439,12 @@ const HangarNFT: React.FC<HangarProps> = ({ onSelectShip, onBack, selectedShipId
           <div className="m-4 p-4 bg-red-900/20 border border-red-700/50 rounded-lg">
             <div className="flex items-center gap-2 text-red-300 mb-2">
               <AlertTriangle size={16} />
-              <span className="font-bold">Error Loading Ships</span>
+              <span className={`${styles.pixelFont}`}>Error Loading Ships</span>
             </div>
-            <div className="text-red-400 text-sm">{error}</div>
+            <div className={`text-red-400 text-sm ${styles.pixelFont}`}>{error}</div>
             <button 
               onClick={() => refresh()}
-              className="mt-2 px-3 py-1 bg-red-800 hover:bg-red-700 rounded text-sm"
+              className={`mt-2 px-3 py-1 bg-red-800 hover:bg-red-700 rounded text-sm ${styles.pixelFont}`}
             >
               Retry
             </button>
@@ -392,7 +453,7 @@ const HangarNFT: React.FC<HangarProps> = ({ onSelectShip, onBack, selectedShipId
   
         {!connected && (
           <div className="m-4 p-4 bg-blue-900/20 border border-blue-700/50 rounded-lg">
-            <div className="text-blue-300 text-center">
+            <div className={`text-blue-300 text-center ${styles.pixelFont}`}>
               Connect your wallet to view your ships
             </div>
           </div>
@@ -400,72 +461,47 @@ const HangarNFT: React.FC<HangarProps> = ({ onSelectShip, onBack, selectedShipId
   
         {/* Crear coleccion y generar nave */}
         {connected && (
-          <div className="p-4 border-b border-gray-700 flex flex-col gap-2">
+          <div className="p-4 border-b border-gray-700 flex justify-center  ">
             {!hasCollection ? (
-              <button
+              <SpriteButton
+                normalSprite={btnCreateCollection}
+                pressedSprite={btnCreateCollectionPressed}
                 onClick={createCollection}
+                width={321}
+                height={66}
+                altText="Create a Collection"
                 disabled={minting}
-                className={`
-                  w-full px-6 py-4 clip-path-polygon font-bold flex items-center justify-center gap-2 border-2 transition-all
-                  ${minting 
-                    ? 'bg-purple-700 text-white' 
-                    : 'bg-gradient-to-r from-green-600 to-emerald-600 border-green-500/50 hover:border-green-400 text-white hover:shadow-[0_0_20px_rgba(34,197,94,0.4)]'
-                  }
-                `}
-              >
-                <Plus size={20} />
-                {minting ? 'Creating Collection...' : 'Create Collection First'}
-              </button>
+              />
             ) : (
-              <button
+              <SpriteButton
+                normalSprite={btnNewShip}
+                pressedSprite={btnNewShipPressed}
                 onClick={generateAndMint}
+                width={321}
+                height={66}
+                altText="Generate New Ship"
                 disabled={minting}
-                className={`
-                  w-full px-6 py-4 clip-path-polygon font-bold flex items-center justify-center gap-2 border-2 transition-all
-                  ${minting 
-                    ? 'bg-purple-700 text-white' 
-                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 border-purple-500/50 hover:border-purple-400 text-white hover:shadow-[0_0_20px_rgba(58,56,214,0.4)]'
-                  }
-                `}
-              >
-                <Plus size={20} />
-                {minting ? 'Minting...' : 'Generate New Ship'}
-              </button>
+              />
             )}
           </div>
         )}
       
         {/* Lista de naves */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {loading ? (
             <div className="flex flex-col justify-center items-center h-40">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500 mb-4"></div>
-              <p className="text-gray-400">Loading active ships...</p>
+              <p className={`text-gray-400 ${styles.pixelFont}`}>Loading active ships...</p>
             </div>
           ) : ships.length === 0 && connected ? (
             <div className="text-center py-10">
-              <div className="text-gray-400 text-4xl mb-4">🚀</div>
-              <p className="text-gray-300 mb-2">No active ships available</p>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className={`text-gray-300 mb-2 ${styles.pixelFont}`}>No active ships available</p>
+              <p className={`text-sm text-gray-500 mb-4 ${styles.pixelFont}`}>
                 {!hasCollection
                   ? 'Create a collection first to mint ships'
                   : 'Generate a new ship!'}
               </p>
               
-              {hasCollection && (
-                <button
-                  onClick={generateAndMint}
-                  disabled={minting}
-                  className={`px-4 py-2 rounded font-bold flex items-center gap-2 mx-auto
-                    ${minting 
-                      ? 'bg-purple-700 text-white' 
-                      : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:shadow-[0_0_15px_rgba(58,56,214,0.3)]'
-                    }`}
-                >
-                  <Plus size={16} />
-                  {minting ? 'Minting...' : 'Generate New Ship'}
-                </button>
-              )}
             </div>
           ) : ships.length > 0 ? (
             <>              
@@ -477,16 +513,6 @@ const HangarNFT: React.FC<HangarProps> = ({ onSelectShip, onBack, selectedShipId
               </div>
             </>
           ) : null}
-        </div>
-        
-        {/* Informacion */}
-        <div className="p-4 border-t border-gray-700 bg-black/50 text-sm text-gray-400">
-          <div className="text-center mt-2 space-y-1">
-            <div className="flex justify-center items-center gap-2">
-              <span className="text-xs">Active Ships:</span>
-              <span className="text-green-300 font-bold">{ships.length}</span>
-            </div>
-          </div>
         </div>
       </div>
     );

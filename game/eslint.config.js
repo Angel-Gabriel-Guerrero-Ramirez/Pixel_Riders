@@ -32,6 +32,7 @@ export default defineConfig([
       'no-useless-escape':'off',
       'prefer-const':'off',
       'no-case-declarations':'off',
+      'react-hooks/purity':'off',
     }
   },
 ])

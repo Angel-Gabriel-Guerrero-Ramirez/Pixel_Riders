@@ -19,11 +19,12 @@ export interface CheckpointData {
   score: number;
   combo: number;
   health: number;
+  maxHealth: number;
   time: number;
   difficulty: number;
   activeEvent: EventType;
   coinsCollected: number;
-  checkpointTime: number; // Tiempo específico del checkpoint (ej: 300, 600, 900 segundos)
+  checkpointTime: number;
 }
 
 export interface CheckpointStats {
@@ -93,11 +94,17 @@ export interface SaveData {
 export interface GameStats {
   score: number;
   combo: number;
+  maxCombo: number; 
   health: number;
+  maxHealth: number;
   time: number; // seconds
   difficulty: number; // 1-5 stars
   activeEvent: EventType;
   coinsCollected: number;
+  scoreMultiplier: number;
+  multiplierProgress: number;
+  enemiesDefeated: number;
+  nextMultiplierThreshold?: number | null;
 }
 
 export interface LeaderboardStats  {

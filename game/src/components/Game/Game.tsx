@@ -6,10 +6,10 @@ import GameOver from './GameOver';
 import HangarNFT from './HangarNFT';
 import Leaderboard from './Leaderboard';
 import CheckpointModal from './CheckpointModal';
-import { Wallet } from 'lucide-react';
 import { getSaveData, saveGameData } from '../../services/storage';
 import { useWallet  } from '@aptos-labs/wallet-adapter-react';
 import { GameState, GameStats, SaveData, EventType, GameMode, HangarShip, ShipConfig, CheckpointData,CheckpointAction } from '../../../types';
+import styles from '../../styles/gameStyle.module.css'
 
 const submitScore = async (
   address: string, 
@@ -66,7 +66,6 @@ const Game: React.FC = () => {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
   
-  /*
   const markShipDestroyed = async (
     tokenId: number, 
     ownerAddress: string,
@@ -99,17 +98,21 @@ const Game: React.FC = () => {
       return false;
     }
   };
-*/
 
   // UI State for the HUD (synced from Canvas)
   const [currentStats, setCurrentStats] = useState<GameStats>({
     score: 0,
     combo: 0,
+    maxCombo: 0,
     health: 3,
+    maxHealth: 2,
     time: 0,
     difficulty: 1,
     activeEvent: EventType.NONE,
-    coinsCollected: 0
+    coinsCollected: 0,
+    scoreMultiplier: 1,
+    multiplierProgress: 0,
+    enemiesDefeated: 0,
   });
 
   // Reload save data on mount
@@ -126,7 +129,7 @@ const Game: React.FC = () => {
         return;
       }
       
-      // Verificar que la nave está ACTIVA
+      // Verificar que la nave esta ACTIVA
       if (selectedHangarShip.status !== 'ALIVE') {
         alert("This ship is destroyed. Select another ship.");
         setGameState(GameState.HANGAR);
@@ -143,11 +146,16 @@ const Game: React.FC = () => {
     setCurrentStats({
       score: 0,
       combo: 0,
+      maxCombo: 0,
       health: initialHealth,
+      maxHealth: initialHealth,
       time: 0,
       difficulty: 1,
       activeEvent: EventType.NONE,
-      coinsCollected: 0
+      coinsCollected: 0,
+      scoreMultiplier: 1,
+      multiplierProgress: 0,
+      enemiesDefeated: 0
     });
   };
 
@@ -180,7 +188,7 @@ const Game: React.FC = () => {
         saveGameData(updatedData);
 
         // Solo enviar al leaderboard si hay wallet y es modo competitivo
-        if (account?.address && gameMode === GameMode.COMPETITIVE) {
+        if (account?.address) {
           try {
             const result = await submitScore(
               String(account.address),
@@ -223,17 +231,16 @@ const Game: React.FC = () => {
       if (finalStats.score > saveData.highScore) {
         updatedData.highScore = finalStats.score;
       }
-      updatedData.maxCombo = Math.max(saveData.maxCombo, finalStats.combo);
+      updatedData.maxCombo = Math.max(saveData.maxCombo, finalStats.maxCombo);
       updatedData.maxTimeSurvived = Math.max(saveData.maxTimeSurvived, finalStats.time);
       updatedData.coins += finalStats.coinsCollected;
       
       setSaveData(updatedData);
       saveGameData(updatedData);
     }
-
+    setCurrentStats(finalStats);
     let shipDestroyed = false;
     if (gameMode === GameMode.COMPETITIVE && selectedHangarShip && account?.address) {
-      /*
       try {
         shipDestroyed = await markShipDestroyed(
           selectedHangarShip.tokenId,
@@ -252,7 +259,7 @@ const Game: React.FC = () => {
       } catch (error) {
         console.error('Error in ship destruction process:', error);
         shipDestroyed = false;
-      }*/
+      }
       console.log("Ship Destroyed", shipDestroyed)
     }
     
@@ -336,26 +343,27 @@ const Game: React.FC = () => {
               stats={currentStats}
               maxHealth = {shipConfig ? shipConfig.life : 3}
             />
-            
-            {currentStats.time > 0 && !checkpointReached && (
-              <div className="absolute top-20 left-4 opacity-80 pointer-events-none">
-                <div className="flex items-center gap-2 bg-black/50 px-3 py-2 rounded-lg border border-yellow-500/50">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                  <span className="text-yellow-300 text-xs font-bold">
-                    Next Save: {formatTime(300 - (currentStats.time % 300))}
+
+            <div className="absolute top-20 left-4 flex flex-col gap-2 pointer-events-none">
+              {/* Checkpoint Timer */}
+              {currentStats.time > 0 && !checkpointReached && (
+                <div className="flex items-center gap-2 bg-black/50 px-3 py-2 border border-yellow-500/50">
+                  <div className="w-2 h-2 bg-yellow-500 animate-pulse"></div>
+                  <span className={`${styles.pixelFont} text-[9px] text-yellow-300 font-bold`}>
+                    Next Save: {formatTime(300 - (currentStats.time % 300))} 
                   </span>
                 </div>
-              </div>
-            )}
-            
-            {/* Mode Indicator Overlay */}
-            {gameMode === GameMode.COMPETITIVE && (
-              <div className="absolute top-16 right-4 opacity-50 pointer-events-none">
-                <span className="text-orange-500 font-bold border border-orange-500 px-2 py-0.5 rounded text-xs uppercase">
-                  Competitive
-                </span>
-              </div>
-            )}
+              )}
+              
+              {/* Mode Indicator */}
+              {gameMode === GameMode.COMPETITIVE && (
+                <div className="aopacity-50 pointer-events-none">
+                  <span className={`${styles.pixelFont} text-orange-500 font-bold border border-orange-500 p-1 px-2 py-0.5 text-[9px] uppercase`}>
+                    Competitive
+                  </span>
+                </div>
+              )}
+            </div>
           </>
         )}
 
@@ -388,23 +396,22 @@ const Game: React.FC = () => {
         <div className="absolute inset-0 z-40 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
           
-          <div className="relative bg-gray-900/95 p-6 rounded-xl border border-cyan-500/50 max-w-xs z-10">
+          <div className="relative bg-gray-900/95 p-6 border border-cyan-500/50 max-w-xs z-10">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-3"></div>
-              <div className="text-cyan-400 font-bold mb-1">
+              <div className="animate-spin h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-3"></div>
+              <div className={`${styles.pixelFont} text-cyan-400 font-bold mb-1`}>
                 {account?.address && gameMode === GameMode.COMPETITIVE 
                   ? "Submitting Score..." 
                   : "Saving Game..."}
               </div>
-              <div className="text-gray-400 text-sm mb-3">
+              <div className={`${styles.pixelFont} text-gray-400 text-sm mb-3 `}>
                 Score: <span className="text-yellow-400 font-bold">{checkpointData?.score.toLocaleString()}</span>
               </div>
 
               {!account?.address && gameMode === GameMode.COMPETITIVE && (
-                <div className="p-2 bg-yellow-900/30 border border-yellow-700/50 rounded text-xs mb-2">
-                  <div className="text-yellow-400">
+                <div className="p-2 bg-yellow-900/30 border border-yellow-700/50 text-xs mb-2">
+                  <div className={`${styles.pixelFont} text-yellow-400`}>
                     <div className="flex items-center gap-1 justify-center">
-                      <Wallet size={12} />
                       <span>Wallet not connected</span>
                     </div>
                     <div className="text-yellow-300 text-xs mt-1">
@@ -415,8 +422,8 @@ const Game: React.FC = () => {
               )}
               
               {submitError && (
-                <div className="p-2 bg-red-900/30 border border-red-700/50 rounded text-xs">
-                  <div className="text-red-400">{submitError}</div>
+                <div className="p-2 bg-red-900/30 border border-red-700/50 text-xs">
+                  <div className={`${styles.pixelFont} text-red-400`}>{submitError}</div>
                 </div>
               )}
             </div>

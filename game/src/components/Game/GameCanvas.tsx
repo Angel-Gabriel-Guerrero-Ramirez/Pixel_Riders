@@ -36,6 +36,7 @@ interface Entity extends Point {
   color: string;
   markedForDeletion: boolean;
 }
+
 interface Player extends Entity {
   hp: number;
   maxHp: number;
@@ -47,7 +48,7 @@ interface Player extends Entity {
   spriteWidth?: number;
   spriteHeight?: number;
   shotStack: number;
-  //shotTimeout?: ReturnType<typeof setTimeout>;
+  shotTimeout?: ReturnType<typeof setTimeout>;
 }
 
 interface Bullet extends Entity {
@@ -182,12 +183,6 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
         speedMultiplier = 1.0;
         break;
         
-      /*case 'DIAGONAL':
-        amplitude = 200 + (difficulty * 30);
-        frequency = 0.4 + (difficulty * 0.1);
-        speedMultiplier = 1.0;
-        break;
-      */  
       default:
         amplitude = 0;
         frequency = 0;
@@ -226,18 +221,23 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     };
   };
   
-  
   const defaultPlayerSprite = useMemo(() => loadImage(defaultSprite), []);
 
   // Stats iniciales de la partida
   const stats = useRef<GameStats>({
     score: 0,
     combo: 0,
+    maxCombo: 0,
     health: shipConfig ? + shipConfig.life : 3,
+    maxHealth: shipConfig ? + shipConfig.life : 3,
     time: 0,
     difficulty: 1,
     activeEvent: EventType.NONE,
     coinsCollected: 0,
+    scoreMultiplier: 1,
+    multiplierProgress: 0,
+    enemiesDefeated: 0,
+    nextMultiplierThreshold: 25,
   });
 
   // Teclas
@@ -606,6 +606,18 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     initializeBackground();
   }, [initializeBackground]);
 
+  useEffect(() => {
+    return () => {
+      if (player.current.shotTimeout) {
+        clearTimeout(player.current.shotTimeout);
+      }
+      
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
+  }, []);
+
   // Game Entities
   const player = useRef<Player>({
     x: CANVAS_WIDTH / 2,
@@ -621,7 +633,8 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     fireTimer: 0,
     weaponLevel: 1,
     sprite: undefined,
-    shotStack: 0
+    shotStack: 0,
+    shotTimeout: undefined
   });
 
   const bullets = useRef<Bullet[]>([]);
@@ -636,6 +649,21 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
   const eventDurationTimer = useRef<number>(0);
   const comboDecayTimer = useRef<number>(0);
   const uiUpdateTimer = useRef<number>(0);
+  const multiplierDecayTimer = useRef<number>(0);
+
+  const calculateMultiplier = (enemiesDefeated: number): { 
+    multiplier: number; 
+    progress: number;
+    nextThreshold: number | null;
+  } => {
+    const cappedDefeated = Math.min(enemiesDefeated, 150);
+    
+    if (cappedDefeated >= 150) return { multiplier: 5, progress: 150, nextThreshold: null };
+    if (cappedDefeated >= 100) return { multiplier: 4, progress: cappedDefeated, nextThreshold: 150 };
+    if (cappedDefeated >= 55) return { multiplier: 3, progress: cappedDefeated, nextThreshold: 100 };
+    if (cappedDefeated >= 25) return { multiplier: 2, progress: cappedDefeated, nextThreshold: 55 };
+    return { multiplier: 1, progress: cappedDefeated, nextThreshold: 25 };
+  };
 
   // Input Handling / Control de movimientos
   useEffect(() => {
@@ -751,13 +779,13 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     if (isBossEvent && enemies.current.length < 3) {
       type = 'BOSS';
       hp = 200 * difficultyMultiplier;
-      size = 80;
+      size = 90;
       speed = 50;
       color = '#51a200';
     } else if (rand > 0.8) {
       type = 'TANK';
       hp = 40 * difficultyMultiplier;
-      size = 64;
+      size = 72;
       speed = 100 + (difficultyMultiplier * 10);
       color = '#6110a2';
     } else if (rand > 0.6) {
@@ -785,16 +813,10 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     // Posicion inicial segun patron
     let initialX = Math.random() * (CANVAS_WIDTH - size);
 
-    /*if (patternConfig.pattern === 'DIAGONAL') {
-      // BOSS: empezar desde un lado aleatorio
-      initialX = Math.random() > 0.5 ? -size : CANVAS_WIDTH;
-      // Asegurar que comience suficientemente fuera de pantalla
-      if (initialX < 0) {
-        initialX = -size - 50; // Más fuera a la izquierda
-      } else {
-        initialX = CANVAS_WIDTH + 50; // Más fuera a la derecha
-      }
-    }*/
+    if (type === 'BOSS') {
+      const margin = size * 1.5;
+      initialX = margin + Math.random() * (CANVAS_WIDTH - size - (margin * 2));
+    }
 
     // Crear enemigo CON SPRITE
     const enemy: Enemy = {
@@ -860,17 +882,6 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
         newVx = triangleValue * enemy.amplitude;
         break;
         
-      /*case 'DIAGONAL':
-        // BOSS - viene de los lados
-        if (enemy.x < CANVAS_WIDTH / 2) {
-          // Viene de la izquierda
-          newVx = Math.abs(Math.cos(enemy.patternPhase)) * enemy.amplitude;
-        } else {
-          // Viene de la derecha
-          newVx = -Math.abs(Math.cos(enemy.patternPhase)) * enemy.amplitude;
-        }
-        break;
-      */  
       default:
         newVx = 0;
         newVy = enemy.vy;
@@ -886,6 +897,9 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     
     switch (enemy.type) {
       case 'BOSS':
+        const bossMargin = enemy.w * 0.5;
+        enemy.x = Math.max(bossMargin, Math.min(CANVAS_WIDTH - enemy.w - bossMargin, enemy.x));
+        break;
       case 'METEOR':
         break;
         
@@ -992,6 +1006,17 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
       }
     }
 
+    if (stats.current.scoreMultiplier >= 1) {
+      multiplierDecayTimer.current += dt;
+      if (multiplierDecayTimer.current > 1.5) {
+        stats.current.multiplierProgress = Math.max(0, stats.current.multiplierProgress - 1);
+        const newMultiplierData = calculateMultiplier(stats.current.multiplierProgress);
+        stats.current.scoreMultiplier = newMultiplierData.multiplier;
+        stats.current.nextMultiplierThreshold = newMultiplierData.nextThreshold;
+        multiplierDecayTimer.current = 0; // Reset timer despues de decay
+      }
+    }
+
     // --- Event System ---
     // Si evento activo es = ninguno
     if (stats.current.activeEvent === EventType.NONE) {
@@ -1029,8 +1054,27 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
 
     // --- Player Shooting ---
     player.current.fireTimer -= dt;
+
+    const getFireRate = () => {
+      const baseRate = 0.2 / config.fireRateMultiplier;
+      const difficulty = stats.current.difficulty;
+      
+      // Solo aumentar velocidad hasta dificultad 5
+      if (difficulty >= 5) {
+        return baseRate * 0.5; // 2x
+      } else if (difficulty >= 4) {
+        return baseRate * 0.6; // 1.66x
+      } else if (difficulty >= 3) {
+        return baseRate * 0.7; // 1.43x
+      } else if (difficulty >= 2) {
+        return baseRate * 0.85; // 1.18x
+      }
+      // Dificultad 1: velocidad normal
+      return baseRate;
+    };
+
     if (player.current.fireTimer <= 0) {
-      const rate = 0.2 / config.fireRateMultiplier; 
+      const rate = getFireRate();
 
       // Firing Logic
       const spawnBullet = (vx: number, vy: number, xOff = 0) => {
@@ -1153,7 +1197,10 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
             // Si no tiene escudo, disminuye vida, aplica invencibilidad de 2 segundos, reset de comobo y explosion en posicion del jugador con el color de la nave y cantidad de particulas
             stats.current.health--;
             player.current.invincibleTimer = 2.0;
-            stats.current.combo = 0; // Reset combo
+            stats.current.combo = 0;
+            stats.current.multiplierProgress = 0;
+            stats.current.scoreMultiplier = 1;
+            multiplierDecayTimer.current = 0;
             createExplosion(player.current.x, player.current.y, config.colorBase, 20);
           }
           e.markedForDeletion = true;
@@ -1189,10 +1236,18 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
                 if (stats.current.combo > 10) comboMult = 1.5;
                 if (stats.current.combo > 25) comboMult = 2.5;
                 if (stats.current.combo > 50) comboMult = 4.0;
-                        
-                const points = Math.floor(e.scoreValue * comboMult);
+
+                stats.current.enemiesDefeated++;
+                stats.current.multiplierProgress++;
+                multiplierDecayTimer.current = 0;
+                const newMultiplierData = calculateMultiplier(stats.current.multiplierProgress);
+                stats.current.scoreMultiplier = newMultiplierData.multiplier;
+                stats.current.nextMultiplierThreshold = newMultiplierData.nextThreshold;
+                
+                const points = Math.floor(e.scoreValue * comboMult * stats.current.scoreMultiplier)
                 stats.current.score += points;
                 stats.current.combo++;
+                stats.current.maxCombo = Math.max(stats.current.maxCombo, stats.current.combo);
                 comboDecayTimer.current = 0; // Reset decay
                         
                 spawnPowerUp(e.x, e.y);
@@ -1220,6 +1275,9 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
             //Si no tiene escudo disminuye vida
             stats.current.health--;
             stats.current.combo = 0;
+            stats.current.multiplierProgress = 0;
+            stats.current.scoreMultiplier = 1;
+            multiplierDecayTimer.current = 0;
           }
           player.current.invincibleTimer = 2.0;
           createExplosion(player.current.x, player.current.y, player.current.color, 10);
@@ -1244,6 +1302,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
           p.markedForDeletion = true;
           stats.current.score += 50;
           stats.current.combo++;
+          stats.current.maxCombo = Math.max(stats.current.maxCombo, stats.current.combo);
                 
           // Tipos de efectos de power up
           switch (p.type) {
@@ -1258,16 +1317,11 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
               } else if(player.current.shotStack === 2){
                 player.current.weaponLevel = 3
               }
-              /*
+              
               clearTimeout(player.current.shotTimeout);
               player.current.shotTimeout = setTimeout(() => {
-              player.current.weaponLevel = 1;
-                player.current.shotStack = 0; // Resetear contador
-              }, 10000);
-              */
-              setTimeout(() => {
-                player.current.weaponLevel = 1;
-                player.current.shotStack = 0;
+                  player.current.weaponLevel = 1;
+                  player.current.shotStack = 0; // Resetear contador
               }, 10000);
               break;
             case PowerUpType.NUKE:
@@ -1280,6 +1334,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
             case PowerUpType.COIN:
                 stats.current.coinsCollected++;
                 addCoins(1);
+                stats.current.score += 500;
                 break;
           }
         }
@@ -1524,6 +1579,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
         score: stats.current.score,
         combo: stats.current.combo,
         health: stats.current.health,
+        maxHealth: stats.current.maxHealth,
         time: currentTime,
         difficulty: stats.current.difficulty,
         activeEvent: stats.current.activeEvent,
@@ -1541,6 +1597,10 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     requestRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(requestRef.current!);
   }, [loop]);
+
+  useEffect(() => {
+    onStatsUpdate({...stats.current, health: stats.current.health})
+  }, [onStatsUpdate]);
 
   return (
     <canvas 

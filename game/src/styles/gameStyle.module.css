@@ -1,0 +1,21 @@
+/* Fuentes */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@400;600;700&display=swap');
+
+@font-face {
+  font-family: 'Aseprite';
+  src: url('/fonts/aseprite.otf.woff2') format('woff2');
+  font-display: swap;
+}
+/* Estilos globales del juego */
+.game-root {
+  background-color: #050505;
+  color: #ffffff;
+  font-family: 'Rajdhani', sans-serif;
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* Pixel Font */
+.pixelFont {
+  font-family: 'Aseprite';
+}
