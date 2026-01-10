@@ -43,6 +43,23 @@ const submitScore = async (
   }
 };
 
+function ScanlineOverlay() {
+  return (
+    <div 
+      className="fixed inset-0 pointer-events-none z-50"
+      style={{
+        background: `repeating-linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0) 0px,
+          rgba(0, 0, 0, 0) 2px,
+          rgba(0, 0, 0, 0.15) 3px,
+          rgba(0, 0, 0, 0.15) 6px
+        )`,
+      }}
+      data-testid="scanline-overlay"
+    />
+  );
+}
 
 const Game: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(GameState.MENU);
@@ -303,6 +320,7 @@ const Game: React.FC = () => {
 
   return (
     <div className="relative w-full h-screen bg-gray-900 flex justify-center items-center overflow-hidden font-sans">
+      <ScanlineOverlay/>
       <div className="relative w-full h-full max-w-[600px] max-h-[800px] bg-black shadow-2xl overflow-hidden border-x border-gray-800">
         
         {gameState === GameState.MENU && (

@@ -214,7 +214,7 @@ const HUD: React.FC<HUDProps> = ({ stats, maxHealth = 3}) => {
 
       {/* Centro (eventos) */}
       {stats.activeEvent !== EventType.NONE && (
-        <div className="absolute top-24 left-1/2 -translate-x-1/2 w-full text-center">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-full text-center">
              <div className={`${styles.pixelFont} animate-pulse text-red-500 font-black text-2xl bg-black/50 p-2 rounded neon-border`}>
                 WARNING: {stats.activeEvent}
              </div>

@@ -38,9 +38,9 @@ const MainMenu: React.FC<MainMenuProps> = ({
   const { connect, disconnect, connected } = useWallet();
   
   return (
-    <div className="flex flex-col items-center justify-between h-full w-full bg-black/90 text-white gap-4 z-10 relative pr-6 pb-6 pl-6"> 
+    <div className="flex flex-col items-center h-full w-full bg-black/90 text-white gap-4 z-10 relative pr-6 pb-6 pl-6"> 
       {/* Header */}
-      <div className="text-center flex flex-col items-center transform">
+      <div className="text-center flex flex-col items-center transform  mt-2">
         <img
           src={logo2}
           alt="Pixel Riders"
@@ -50,7 +50,7 @@ const MainMenu: React.FC<MainMenuProps> = ({
 
       {/* Connect/Disconnect */}
       {connected ? (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center mt-3 mb-3">
           <SpriteButton
             normalSprite={btnDisconnect}
             pressedSprite={btnDisconnectPressed}

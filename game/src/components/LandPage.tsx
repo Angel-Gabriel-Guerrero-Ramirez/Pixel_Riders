@@ -1,36 +1,40 @@
-import { RefreshCw, ChevronRight, ChevronDown, Rocket, Wallet, Gamepad2, Trophy, Crown } from "lucide-react";
-import { SiX, SiGithub, SiEthereum } from "react-icons/si";
+import { RefreshCw, ChevronDown, Crown, ChevronUp } from "lucide-react";
+import { SiX, SiGithub } from "react-icons/si";
+import { useNavigate } from "react-router-dom";
+
+
+import Logo from '../assets/images/logo2.png'
+import whatPR from '../assets/images/whatsPR3.png';
+import checkpointTitle from '../assets/page/txtCheck.png';
+import imgHUD1 from '../assets/page/imgPageHUD1.png';
+import imgHUD2 from '../assets/page/imgPageHUD2.png';
+import imgPagePower from '../assets/page/imgPagePU.png';
+
+import btnPlay from '../assets/page/btnPlay.png';
+
+import imgPixel1 from '../assets/page/imgPage1.png';
+import imgPixel2 from '../assets/page/imgPage2.png';
+import imgPixel3 from '../assets/page/imgPage3.png';
+import imgPixelD from '../assets/page/imagePixelArt3.png';
+
+import eventFrenzy from '../assets/page/frenzy.png';
+import eventMiniBoss from '../assets/page/miniBoss.png';
+import eventPowerUp from '../assets/page/power.png';
+import eventBullet from '../assets/page/bullet.png';
+import eventMeteor from '../assets/page/meteor.png';
+import txtFun from '../assets/page/collapsableTexFun.png';
+import txtHonor from '../assets/page/collapsableTextHonor.png';
+
+import gameVideo from '../assets/video/PixelRiderPreview2Compress.mp4'
+
 import { useEffect, useState, useCallback } from "react";
 import axios from 'axios';
 import styles from '../styles/gameStyle.module.css'
 
 // ========== INTERFACES ==========
-interface ArcadeButtonProps {
-  children: React.ReactNode;
-  onClick?: () => void;
-  href?: string;
-  variant?: "primary" | "secondary";
-  showArrow?: boolean;
-  className?: string;
-}
-
-interface FeatureCardProps {
-  title: string;
-  description: string;
-  imageColor: string;
-}
 
 interface HeroSectionProps {
-  onPlayClick?: () => void;
   onScrollDown?: () => void;
-}
-
-interface StepProps {
-  number: number;
-  title: string;
-  description: string;
-  icon: typeof Wallet;
-  color: string;
 }
 
 interface LiveLeaderEntry {
@@ -57,56 +61,141 @@ interface PixelLogoProps {
   className?: string;
 }
 
+interface EventTypeIMGProps {
+  img?: string;
+  altText: string;
+  color: string;
+  title: string;
+  description: string;
+  
+}
+
+interface GameModeCollapsableProps {
+  imgText: string;
+  alt: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  color: string;
+  children: React.ReactNode;
+}
+
+function GameModeCollapsable({
+  imgText,
+  alt,
+  isOpen,
+  onToggle,
+  color,
+  children
+}: GameModeCollapsableProps) {
+  return (
+    <div 
+      className={`flex-1 transition-all duration-100 ${
+        isOpen ? 'border-2 ' : ''
+      }`}
+      style={{ 
+        borderColor: color,
+      }}
+    >
+      {/* Header del collapsable */}
+      <button
+        onClick={onToggle}
+        className="w-full p-6 flex flex-col items-center text-center transition-colors cursor-pointer"
+      >
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="text-left">
+            <img
+              src={imgText}
+              alt={alt}
+              className="w-full h-full object-contain"
+            />
+            
+          </div>
+          <div className="ml-auto">
+            {isOpen ? (
+              <ChevronUp size={24} style={{ color }} />
+            ) : (
+              <ChevronDown size={24} style={{ color }} />
+            )}
+          </div>
+        </div>
+      </button>
+
+      {/* Contenido desplegable */}
+      <div 
+        className={`overflow-hidden transition-all duration-300 ${
+          isOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="p-6 pt-0">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EventTypeIMG({
+  img,
+  color,
+  altText,
+  title,
+  description,
+}: EventTypeIMGProps){
+
+  return(
+    <div
+      className="flex flex-col items-center text-center"
+    >
+      <div 
+        className="w-full aspect-square mb-4 flex items-center justify-center"
+      >
+        <img
+          src={img}
+          alt={altText}
+          className="object-contain"
+        />
+      </div>
+      <h1
+        className="font-pixel text-sm mb-2"
+        style={{
+          color: color,
+        }}
+      >
+        {title}
+      </h1>
+
+      <p className="leading-relaxed">
+        {description}
+      </p>
+    </div>
+  )
+}
+
 // ========== SUB-COMPONENTS ==========
 function PixelLogo({ className = "" }: PixelLogoProps) {
   return (
     <div className={`flex flex-col items-center animate-float ${className}`} data-testid="pixel-logo">
       {/* Titulo */}
       <div className="relative">
-        <h1 
-          className={`text-4xl md:text-6xl lg:text-7xl text-center tracking-wider ${styles.pixelFont}`}
-          style={{
-            color: "#00f7ff",
-            textShadow: `
-              0 0 10px #00f7ff,
-              0 0 20px #00f7ff,
-              0 0 40px #00f7ff,
-              0 0 80px #00f7ff,
-              2px 2px 0px #ff006e,
-              4px 4px 0px #b100ff
-            `,
-          }}
-        >
-          PIXEL
-        </h1>
-        <h1 
-          className={`text-4xl md:text-6xl lg:text-7xl text-center tracking-wider mt-2 ${styles.pixelFont}`}
-          style={{
-            color: "#ff006e",
-            textShadow: `
-              0 0 10px #ff006e,
-              0 0 20px #ff006e,
-              0 0 40px #ff006e,
-              2px 2px 0px #00f7ff,
-              4px 4px 0px #b100ff
-            `,
-          }}
-        >
-          RIDERS
-        </h1>
+        <div className="text-center flex flex-col items-center">
+        <img
+          src={Logo}
+          alt="Pixel Riders"
+          className="w-full h-full object-contain"
+        />
+      </div>
       </div>
       {/* Cubos de color */}
       <div 
         className="mt-4 flex gap-2"
-        style={{ filter: "drop-shadow(0 0 8px #39ff14)" }}
       >
-        {[...Array(5)].map((_, i) => (
+        {[...Array(6)].map((_, i) => (
           <div
             key={i}
             className="w-2 h-2 md:w-3 md:h-3"
             style={{
-              backgroundColor: i % 2 === 0 ? "#39ff14" : "#ffea00",
-              boxShadow: `0 0 6px ${i % 2 === 0 ? "#39ff14" : "#ffea00"}`,
+              backgroundColor: i % 2 === 0 ? "#49a269" : "#b21030",
+              
             }}
           />
         ))}
@@ -115,291 +204,34 @@ function PixelLogo({ className = "" }: PixelLogoProps) {
   );
 }
 
-function ArcadeButton({
-  children,
-  onClick,
-  href,
-  variant = "primary",
-  showArrow = true,
-  className = "",
-}: ArcadeButtonProps) {
-  const baseStyles = `
-    relative font-pixel text-sm md:text-base uppercase tracking-wider
-    px-8 py-4 md:px-12 md:py-5
-    border-4 border-white
-    transition-all duration-200
-    flex items-center justify-center gap-3
-    cursor-pointer
-    ${className}
-  `;
 
-  const primaryStyles = `
-    bg-[#00f7ff] text-[#0a0e27]
-    animate-pulse-glow
-    hover:scale-105 hover:brightness-110
-    active:scale-95
-  `;
-
-  const secondaryStyles = `
-    bg-transparent text-[#00f7ff]
-    border-[#00f7ff]
-    hover:bg-[#00f7ff] hover:text-[#0a0e27]
-    hover:scale-105
-    active:scale-95
-  `;
-
-  const styles = variant === "primary" ? primaryStyles : secondaryStyles;
-
-  const content = (
-    <>
-      {children}
-      {showArrow && (
-        <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
-      )}
-    </>
-  );
-
-  if (href) {
-    return (
-      <a
-        href={href}
-        className={`${baseStyles} ${styles}`}
-        data-testid="button-arcade"
-        onClick={onClick}
-      >
-        {content}
-      </a>
-    );
-  }
-
-  return (
-    <button
-      onClick={onClick}
-      className={`${baseStyles} ${styles}`}
-      data-testid="button-arcade"
-    >
-      {content}
-    </button>
-  );
-}
-
-function GamePreview() {
+function VideoPreview() {
   return (
     <div 
-      className="relative w-full max-w-md mx-auto aspect-[4/3] border-4 overflow-hidden"
-      style={{ 
-        borderColor: "#b100ff",
-        backgroundColor: "rgba(10, 14, 39, 0.8)",
-        boxShadow: "0 0 30px rgba(177, 0, 255, 0.3)",
-      }}
-      data-testid="game-preview"
+      className="relative w-full max-w-md mx-auto aspect-video overflow-hidden"
+      data-testid="video-preview"
     >
-      <div className="absolute top-2 right-2 font-pixel text-xs text-white flex items-center gap-2">
-        <span>01 2 3 4 5 6 7 8</span>
-      </div>
-
-      <div 
-        className="absolute top-2 right-24 px-2 py-1 font-pixel text-xs"
-        style={{ 
-          backgroundColor: "#ffea00",
-          color: "#0a0e27",
-        }}
-      >
-        COMBO
-      </div>
 
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="flex gap-8">
-          <div 
-            className="w-8 h-8 flex items-center justify-center"
-            style={{ color: "#00f7ff" }}
-          >
-            <Rocket className="w-6 h-6 rotate-180" />
-          </div>
-          <div 
-            className="w-8 h-8 flex items-center justify-center"
-            style={{ color: "#ff006e" }}
-          >
-            <Rocket className="w-6 h-6 rotate-180" />
-          </div>
-          <div 
-            className="w-8 h-8 flex items-center justify-center"
-            style={{ color: "#39ff14" }}
-          >
-            <Rocket className="w-6 h-6 rotate-180" />
-          </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-        <div 
-          className="w-10 h-10 flex items-center justify-center"
-          style={{ color: "#00f7ff" }}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
         >
-          <Rocket className="w-8 h-8" />
-        </div>
+          <source src={gameVideo} type="video/mp4" />
+          <div className="w-full h-full flex items-center justify-center bg-black">
+            <p className="text-white font-pixel">Video not supported</p>
+          </div>
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
       </div>
 
-      {[...Array(20)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 rounded-full bg-white/50"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-          }}
-        />
-      ))}
     </div>
   );
 }
 
-function FeatureCard({
-  title,
-  description,
-  imageColor,
-}: FeatureCardProps) {
-  return (
-    <div
-      className="flex flex-col items-center text-center"
-      data-testid={`card-feature-${title.toLowerCase()}`}
-    >
-      <div 
-        className="w-full aspect-square mb-4 border-2 flex items-center justify-center"
-        style={{ 
-          borderColor: imageColor,
-          backgroundColor: "rgba(30, 30, 60, 0.5)",
-        }}
-      >
-        <div 
-          className="w-16 h-16 rounded-md"
-          style={{ backgroundColor: imageColor, opacity: 0.6 }}
-        />
-      </div>
-
-      <h3
-        className="font-pixel text-sm mb-2"
-        style={{
-          color: imageColor,
-          textShadow: `0 0 10px ${imageColor}`,
-        }}
-      >
-        {title}
-      </h3>
-
-      <p className="font-retro text-base text-foreground/70 leading-relaxed">
-        {description}
-      </p>
-    </div>
-  );
-}
-
-function Step({ number, title, description, icon: Icon, color }: StepProps) {
-  return (
-    <div 
-      className="flex flex-col items-center text-center p-6"
-      data-testid={`step-${number}`}
-    >
-      <div 
-        className="relative mb-4"
-        style={{
-          filter: `drop-shadow(0 0 15px ${color})`,
-        }}
-      >
-        <div 
-          className="w-20 h-20 flex items-center justify-center rounded-md border-2"
-          style={{
-            borderColor: color,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-          }}
-        >
-          <Icon size={40} style={{ color }} />
-        </div>
-        <div 
-          className="absolute -top-3 -left-3 w-8 h-8 flex items-center justify-center font-pixel text-sm"
-          style={{
-            backgroundColor: color,
-            color: "#000",
-            boxShadow: `0 0 10px ${color}`,
-          }}
-        >
-          {number}
-        </div>
-      </div>
-      
-      <h3 
-        className="font-pixel text-sm md:text-base mb-2"
-        style={{
-          color,
-          textShadow: `0 0 10px ${color}`,
-        }}
-      >
-        {title}
-      </h3>
-      
-      <p 
-        className="font-vt323 text-lg md:text-xl"
-        style={{ color: "#d0f4ff" }}
-      >
-        {description}
-      </p>
-    </div>
-  );
-}
-
-/*
-function LeaderRow({ rank, name, score, prize, color }: LeaderEntry) {
-  const isFirst = rank === 1;
-  
-  return (
-    <div 
-      className={`flex items-center gap-4 p-4 md:p-6 rounded-md border-2 ${isFirst ? "md:scale-105" : ""}`}
-      style={{
-        borderColor: color,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        boxShadow: isFirst ? `0 0 20px ${color}` : `0 0 10px ${color}40`,
-      }}
-      data-testid={`leaderboard-row-${rank}`}
-    >
-      <div 
-        className="w-12 h-12 flex items-center justify-center font-pixel text-lg md:text-xl"
-        style={{
-          backgroundColor: color,
-          color: "#000",
-          boxShadow: `0 0 10px ${color}`,
-        }}
-      >
-        {isFirst ? <Crown size={24} /> : `#${rank}`}
-      </div>
-      
-      <div className="flex-1 min-w-0">
-        <p 
-          className="font-pixel text-xs md:text-sm truncate"
-          style={{
-            color,
-            textShadow: `0 0 8px ${color}`,
-          }}
-        >
-          {name}
-        </p>
-        <p 
-          className="font-vt323 text-lg md:text-xl"
-          style={{ color: "#d0f4ff" }}
-        >
-          {score.toLocaleString()} PTS
-        </p>
-      </div>
-      
-      <div 
-        className="flex items-center gap-2 font-pixel text-xs md:text-sm"
-        style={{ color: "#ffea00" }}
-      >
-        <SiEthereum size={18} />
-        <span>{prize}</span>
-      </div>
-    </div>
-  );
-}*/
 
 function ScanlineOverlay() {
   return (
@@ -410,8 +242,8 @@ function ScanlineOverlay() {
           0deg,
           rgba(0, 0, 0, 0) 0px,
           rgba(0, 0, 0, 0) 2px,
-          rgba(0, 0, 0, 0.15) 2px,
-          rgba(0, 0, 0, 0.15) 4px
+          rgba(0, 0, 0, 0.15) 3px,
+          rgba(0, 0, 0, 0.15) 6px
         )`,
       }}
       data-testid="scanline-overlay"
@@ -424,7 +256,7 @@ function Starfield() {
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
-    const colors = ["#ffffff", "#00f7ff", "#b100ff", "#ff006e"];
+    const colors = ["#ffffff", "#00f7ff", "#b100ff", "#ff006e"]; 
     const generatedStars: Star[] = [];
     
     for (let i = 0; i < 150; i++) {
@@ -466,7 +298,6 @@ function Starfield() {
             backgroundColor: star.color,
             opacity: star.opacity,
             animationDelay: `${star.animationDelay}s`,
-            boxShadow: `0 0 ${star.size * 2}px ${star.color}`,
             willChange: "top",
           }}
         />
@@ -476,34 +307,18 @@ function Starfield() {
 }
 
 
-function HeroSection({ onPlayClick, onScrollDown }: HeroSectionProps) {
-  const handlePlayClick = () => {
-    if (onPlayClick) {
-      onPlayClick();
-    } else {
-      console.log("Play button clicked - redirect to game");
-    }
-  };
-
+function HeroSection({ onScrollDown }: HeroSectionProps) {
+  const navigate = useNavigate();
   return (
     <section 
-      className="relative min-h-screen flex flex-col items-center pt-16 pb-16 px-4"
+      className="relative min-h-screen flex flex-col items-center pt-10 pb-16 px-4"
       data-testid="section-hero"
       style={{
-        background: "radial-gradient(ellipse at center, #0a0e27 0%, #050814 70%, #000000 100%)",
+        background: "radial-gradient(ellipse at center, #02040D 0%, #050814 70%, #000000 100%)",
       }}
     >
       <div 
-        className="relative p-8 md:p-12 border-4 max-w-2xl w-full z-10"
-        style={{
-          borderColor: "#b100ff",
-          backgroundColor: "rgba(5, 8, 20, 0.85)",
-          backdropFilter: "blur(10px)",
-          boxShadow: `
-            0 0 40px rgba(177, 0, 255, 0.5),
-            inset 0 0 20px rgba(0, 247, 255, 0.1)
-          `,
-        }}
+        className="relative p-8 md:p-12 max-w-2xl w-full z-10"
       >
         
         <div className="flex flex-col items-center gap-6">
@@ -516,14 +331,21 @@ function HeroSection({ onPlayClick, onScrollDown }: HeroSectionProps) {
             Old retro style Shoot'Em Up were you can compete for ETH prizes!
           </p>
 
-          <ArcadeButton onClick={handlePlayClick} href="/" showArrow={false} className={`${styles.pixelFont}`}>
-            PLAY NOW
-          </ArcadeButton>
+          <button
+            onClick={() => navigate("/")}
+          >
+            <img 
+              src={btnPlay}
+              alt="Play Now"
+              className="w-full h-full object-contain"
+            />
+          </button>
+
         </div>
       </div>
 
       <div className="mt-8 w-full max-w-lg">
-        <GamePreview />
+        <VideoPreview/>
       </div>
 
       <button
@@ -538,7 +360,7 @@ function HeroSection({ onPlayClick, onScrollDown }: HeroSectionProps) {
       </button>
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(70)].map((_, i) => (
+        {[...Array(200)].map((_, i) => (
         <div
           key={i}
           className="absolute w-1 h-1 bg-white/50"
@@ -553,136 +375,342 @@ function HeroSection({ onPlayClick, onScrollDown }: HeroSectionProps) {
   );
 }
 
-function GameShowcaseSection() {
-  const features = [
-    {
-      title: "PLAY",
-      description: "Have fun with this frenetic old style game!",
-      imageColor: "#00f7ff",
-    },
-    {
-      title: "COMPETE",
-      description: "Compete with another players, try to reach the best score!",
-      imageColor: "#ff006e",
-    },
-    {
-      title: "EARN",
-      description: "Top 3 players on the leaderboard would get ETH!",
-      imageColor: "#39ff14",
-    },
-  ];
+function TitleExplained(){
+  return(
+    <section
+      className="relative pt-16 pb-8 px-4"
+      style={{ backgroundColor: "hsl(235 50% 8%)" }}
+      data-testid="section-TitleExplained"
+    >
+      <div className="flex justify-center">
+        <img
+          src={whatPR}
+          alt="WHAT'S PIXEL RIDERS?"
+        />
+      </div>
+      
+  </section>
+  )
+}
 
+function GameShowcaseSection() {
   return (
     <section 
-      className="relative py-16 md:py-24 px-4"
+      className="relative pb-16 px-4 overflow-hidden"
       style={{ backgroundColor: "hsl(235 50% 8%)" }}
       data-testid="section-showcase"
     >
-      <div className={`${styles.pixelFont} max-w-4xl mx-auto`}>
-        <div className="text-center mb-12">
-          <h2
-            className="font-pixel text-lg md:text-xl lg:text-2xl"
-            style={{
-              color: "#b100ff",
-              textShadow: "0 0 20px #b100ff",
-            }}
-          >
-            What's Pixel Riders?
-          </h2>
+      <div className={`${styles.pixelFont} max-w-6xl mx-auto`}>
+
+        <div className="mb-5 text-center">
+          <div className="mb-1">
+            Pixel Riders is a shoot'em up videogame where you fight against an infinite alien enemy army 
+            and try to achieve the highest score possible.
+          </div>
+          <br/>
+          <div className="mb-1">
+            You control a single ship in fast-paced combat, focusing on movement, dodging, and constant damage output.
+          </div>
+          <br/>
+          <div className="mb-1">
+            The controls are simple and intuitive, allowing you to concentrate on surviving overwhelming enemy 
+            waves. During a run, you can obtain power-ups such as more shooting power, shields and bombs, helping you last longer as the difficulty escalates.        
+          </div>
+          <br/>
+          <div className="mb-1">
+            As time passes, the difficulty increases. Every minute, enemy rate and life rise, pushing 
+            your reflexes and positioning skills further. 
+          </div>
+
+          <div className="flex justify-center">
+            <div className="grid grid-cols-1 max-w-[600px] md:grid-cols-2 gap-8">
+
+              <EventTypeIMG
+                img={imgHUD1}
+                altText="Multiplier"
+                color="#6110a2"
+                title="MULTIPLIER"
+                description="With each enemy destroyed, your multiplier bar gauge will increase until it level up "
+              />
+
+              <EventTypeIMG
+                img={imgPagePower}
+                altText="Power Up"
+                color="#306141"
+                title="POWER-UP TYPES"
+                description="More Shoots. Shield covers your ship for one hit. Bomb destroy all enemies"
+              />
+
+              
+            </div>
+          </div>
+          
+          <br/>
+          <div className="mb-1">
+            In addition, every 20 seconds the game randomly chooses one of these 5 possible events, forcing you to constantly adapt your strategy.
+          </div>
+          <br/>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <FeatureCard
-              key={index}
-              title={feature.title}
-              description={feature.description}
-              imageColor={feature.imageColor}
+        <div>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+            <EventTypeIMG
+              img={eventMeteor}
+              altText="METEOIR RAIN"
+              color="#fb923c"
+              title="METEOR RAIN"
+              description="Meteors rain down on you"
             />
-          ))}
+
+            <EventTypeIMG
+              img={eventFrenzy}
+              altText="ENEMY FRENZY"
+              color="#306141"
+              title="ENEMY FRENZY"
+              description="Enemies spawn many more and faster"
+            />
+
+            <EventTypeIMG
+              img={eventPowerUp}
+              altText="POWER UP"
+              color="#9e231c"
+              title="POWER-UP TIDE"
+              description="Enemies drops power-ups more frequently"
+            />
+
+            <EventTypeIMG
+              img={eventBullet}
+              altText="BULLET HELL"
+              color="#6110a2"
+              title="BULLET HELL"
+              description="All enemies will be able to fire projectiles"
+            />
+
+            <EventTypeIMG
+              img={eventMiniBoss}
+              altText="MINIBOSS"
+              color="#51a200"
+              title="MINI-BOSS INVASION"
+              description="A group of the toughest enemies appears."
+            />
+          </div>
         </div>
       </div>
+
     </section>
   );
 }
 
-function HowToPlaySection() {
-  const steps = [
-    {
-      number: 1,
-      title: "CONNECT WALLET",
-      description: "Link your crypto wallet to get started and compete for prizes",
-      icon: Wallet,
-      color: "#00f7ff",
-    },
-    {
-      number: 2,
-      title: "PLAY GAME",
-      description: "Survive through waves of enemies and rack up your high score",
-      icon: Gamepad2,
-      color: "#ff006e",
-    },
-    {
-      number: 3,
-      title: "WIN ETH",
-      description: "Top 3 scores on the leaderboard win ETH prizes every week",
-      icon: Trophy,
-      color: "#39ff14",
-    },
-  ];
+function GameModesSection() {
+  const [openMode, setOpenMode] = useState<'free' | 'competitive' | null>('free');
+
+  const toggleFreeMode = () => {
+    setOpenMode(openMode === 'free' ? null : 'free');
+  };
+
+  const toggleCompetitiveMode = () => {
+    setOpenMode(openMode === 'competitive' ? null : 'competitive');
+  };
 
   return (
     <section 
       className="relative py-16 md:py-24 px-4"
       style={{ backgroundColor: "hsl(235 50% 6%)" }}
-      data-testid="section-how-to-play"
+      data-testid="section-game-modes"
     >
-      <div className={`${styles.pixelFont} max-w-4xl mx-auto `}>
+      <div className={`${styles.pixelFont} max-w-9xl mx-auto`}>
         <div className="text-center mb-12">
-          <h2
-            className="font-pixel text-lg md:text-xl lg:text-2xl"
+          <h1
+            className="text-lg md:text-xl lg:text-5xl mb-4"
             style={{
-              color: "#00f7ff",
-              textShadow: "0 0 20px #00f7ff",
+              color: "#b100ff",
             }}
           >
-            How to Play
-          </h2>
+            GAME MODES
+          </h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {steps.map((step) => (
-            <Step
-              key={step.number}
-              number={step.number}
-              title={step.title}
-              description={step.description}
-              icon={step.icon}
-              color={step.color}
-            />
-          ))}
-        </div>
-
-        <div className="flex items-center justify-center gap-4 mt-8">
-          <div 
-            className="h-px flex-1 max-w-[100px]"
-            style={{ background: "linear-gradient(to right, transparent, #00f7ff)" }}
-          />
-          <span 
-            className="font-vt323 text-lg"
-            style={{ color: "#00f7ff" }}
+        {/* Contenedor de collapsables */}
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8">
+          {/* Modo Free */}
+          <GameModeCollapsable
+            imgText={txtFun}
+            alt="FREE"
+            isOpen={openMode === 'free'}
+            onToggle={toggleFreeMode}
+            color="#306141"
           >
-            IT'S THAT SIMPLE
-          </span>
-          <div 
-            className="h-px flex-1 max-w-[100px]"
-            style={{ background: "linear-gradient(to left, transparent, #00f7ff)" }}
-          />
+            <div className={`space-y-6`}>
+              {/* Características */}
+              <div className="space-y-4">
+                <div className="flex text-center gap-3">
+                  <div>
+                      <div className="mb-1 text-center ">
+                        Simply select this mode and start playing immediately with a default ship. 
+                      </div>
+                      <br/>
+                      <div className="mb-1 text-center text-[#a2f3a2]">
+                        If your wallet is connected and you've generated ships, you can use them in this mode. And if you die, you won't lose them.
+                      </div>
+                      <br/>
+                      <p className="mb-2 text-center">
+                        It is designed for casual play and practice, allowing you to enjoy the core gameplay without pressure.
+                        <br/>
+                      </p>
+
+                      <div className="mt-2">
+                        Scores in FOR FUN mode are not tracked on competitive leaderboard, but it has its own leaderboard altough there is no prize for reach the top 3.
+                      </div>
+
+                      <div className="flex justify-center items-center mt-4">
+                        <img
+                          src={imgPixelD}
+                          className="w-[240px] object-contain"
+                        />
+                      </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </GameModeCollapsable>
+
+          {/* Modo Competitivo */}
+          <GameModeCollapsable
+            imgText={txtHonor}
+            alt="COMPETITIVE"
+            isOpen={openMode === 'competitive'}
+            onToggle={toggleCompetitiveMode}
+            color="#b21030"
+          >
+            <div className="space-y-6">
+              {/* Características */}
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div>
+                      <div className="mb-1 text-center ">
+                        FOR HONOR mode offers a more challenging and competitive experience.
+                      </div>
+                      <br/>
+                      <div className="mb-1 text-center">
+                        To play this mode, you must connect your wallet and generate a ship.
+                      </div>
+                      <div className="mb-1 text-center text-[#b21030] mt-2">
+                        IF YOU DIE IN THIS MODE YOUR SHIP WILL BE DESTROYED PERMANENTLY
+                      </div>
+                      <br/>
+
+                      <div className="flex flex items-center justify-center mb-3">
+                        <div>
+                          <img
+                            src={imgPixel3}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0 ml-2">
+                          <p className="text-left ml-2">
+                              Each generated ship features:
+                              <br/>
+                              <br/>
+                              A randomized skin
+                              <br/>
+                              Randomized stats (Life and Attack Damage)
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex items-center justify-center mb-3">
+                        <div>
+                          <img
+                            src={imgPixel1}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0 ml-2">
+                          <p className="text-lef ml-2">
+                            With your generated ship, you compete against other players to achieve the highest score on the leaderboard.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex items-center justify-center mb-3">
+                        <div>
+                          <img
+                            src={imgPixel2}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0 ml-2">
+                          <p className="text-lef ml-2">
+                            The top 3 players receive ETH rewards. These rewards come from the fees paid by players when generating ships, making the competition both skill-based and high-stakes. 
+                          </p>
+                        </div>
+                      </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </GameModeCollapsable>
         </div>
       </div>
     </section>
   );
 }
+
+function HUDElements(){
+  return (
+    <section 
+      className="relative pb-24 px-4"
+      style={{ backgroundColor: "hsl(235 50% 6%)" }}
+      data-testid="section-HUD-Elements"
+    >
+      <div className={`${styles.pixelFont} justify-items-center max-w-2xl mx-auto`}>
+
+        <div className="">
+          <img
+            src={checkpointTitle}
+          />
+        </div>
+
+        <div className="mt-10 text-center">
+          Your score is not automatically saved.
+          <br/>
+          To secure it, you must reach a checkpoint, which appears every 5 minutes. 
+          <br/>
+          At each checkpoint, you must make a choice:
+          <br/><br/>
+          <div className="text-[#a2f3a2]">
+            Save your score and your ship, and quit the game.
+          </div>
+          <br/>
+          or
+          <br/><br/>
+          <div className="text-[#b21030]">
+            Keep playing, risking your ship and your score if you die, but with the chance to improve your score.
+          </div>
+          <br/><br/>
+            The longer you survive, the harder this decision becomes.
+        </div>
+        
+        <div className="justify-items-center mt-5">   
+          <div className="w-full max-w-sm">
+            <EventTypeIMG
+              img={imgHUD2}
+              altText="Checkpoint"
+              color="#a2f3a2"
+              title=""
+              description=""
+            />
+          </div>
+
+        </div>
+      </div>
+    </section>
+  )
+}
+
 
 function LiveLeaderboardSection() {
   const [leaders, setLeaders] = useState<LiveLeaderEntry[]>([]);
@@ -764,7 +792,6 @@ function LiveLeaderboardSection() {
               className="font-pixel text-lg md:text-xl lg:text-2xl"
               style={{
                 color: "#ffea00",
-                textShadow: "0 0 20px #ffea00",
               }}
             >
               LIVE LEADERBOARD
@@ -802,7 +829,6 @@ function LiveLeaderboardSection() {
                   style={{
                     borderColor: prize?.color || "#666666",
                     backgroundColor: "rgba(0, 0, 0, 0.6)",
-                    boxShadow: `0 0 20px ${prize?.color || "#666666"}40`,
                   }}
                 >
                   <div 
@@ -810,7 +836,6 @@ function LiveLeaderboardSection() {
                     style={{
                       backgroundColor: prize?.color || "#666666",
                       color: "#000",
-                      boxShadow: `0 0 15px ${prize?.color || "#666666"}`,
                     }}
                   >
                     {leader.rank === 1 ? <Crown size={24} /> : `#${leader.rank}`}
@@ -822,7 +847,7 @@ function LiveLeaderboardSection() {
                         className="font-pixel text-xs md:text-sm truncate"
                         style={{
                           color: prize?.color || "#ffffff",
-                          textShadow: `0 0 8px ${prize?.color || "#ffffff"}`,
+
                         }}
                       >
                         {shortenAddress(leader.address)}
@@ -842,7 +867,6 @@ function LiveLeaderboardSection() {
                   {prize && (
                     <div className="flex flex-col items-end">
                       <div className="flex items-center gap-2 font-pixel text-xs md:text-sm">
-                        <SiEthereum size={20} className="text-yellow-400" />
                         <span className="text-yellow-300">{prize.prize}</span>
                       </div>
                     </div>
@@ -865,103 +889,10 @@ function LiveLeaderboardSection() {
     </section>
   );
 }
-/*
-function ContentSection({
-  title,
-  paragraphs,
-  showButtons = true,
-  imagePosition = "right",
-  imageColor = "#b100ff",
-}: ContentSectionProps) {
-  const textContent = (
-    <div className="flex flex-col gap-4">
-      <h3 className="font-pixel text-base md:text-lg text-foreground">
-        {title}
-      </h3>
-      {paragraphs.map((paragraph, index) => (
-        <p key={index} className="font-retro text-lg text-foreground/70">
-          {paragraph}
-        </p>
-      ))}
-      {showButtons && (
-        <div className="flex flex-wrap gap-3 mt-4">
-          <Button
-            variant="outline"
-            className="font-pixel text-xs"
-          >
-            Boton
-          </Button>
-          <Button
-            variant="ghost"
-            className="font-pixel text-xs"
-          >
-            Boton secundario
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-
-  const imageContent = (
-    <div 
-      className="w-full aspect-[4/3] border-2 flex items-center justify-center"
-      style={{ 
-        borderColor: imageColor,
-        backgroundColor: "rgba(30, 30, 60, 0.3)",
-      }}
-    >
-      <div 
-        className="w-24 h-24 rounded-md"
-        style={{ backgroundColor: imageColor, opacity: 0.4 }}
-      />
-    </div>
-  );
-
-  return (
-    <section 
-      className="py-12 md:py-16 px-4"
-      style={{ backgroundColor: "hsl(235 50% 8%)" }}
-      data-testid="section-content"
-    >
-      <div className="max-w-4xl mx-auto">
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 items-center ${imagePosition === "left" ? "md:flex-row-reverse" : ""}`}>
-          {imagePosition === "left" ? (
-            <>
-              {imageContent}
-              {textContent}
-            </>
-          ) : (
-            <>
-              {textContent}
-              {imageContent}
-            </>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-}
-*/
 
 function Footer() {
-  /*const footerLinks = [
-    {
-      title: "Tema",
-      links: ["Pagina", "Pagina", "Pagina"],
-    },
-    {
-      title: "Tema",
-      links: ["Pagina", "Pagina", "Pagina"],
-    },
-    {
-      title: "Tema",
-      links: ["Pagina", "Pagina", "Pagina"],
-    },
-  ];
-  */
   const socialLinks = [
-    { icon: SiX, href: "#", label: "Twitter" },
-    //{ icon: SiDiscord, href: "#", label: "Discord" },
+    { icon: SiX, href: "https://x.com/LeMat260g", label: "Twitter" },
     { icon: SiGithub, href: "https://github.com/Angel-Gabriel-Guerrero-Ramirez/Pixel_Riders", label: "GitHub" },
   ];
 
@@ -1040,14 +971,10 @@ function Footer() {
 
 // ========== MAIN LANDING PAGE COMPONENT ==========
 export default function LandingPage() {
-  const handlePlayClick = () => {
-    console.log("Play button clicked");
-    // Add your play button logic here
-  };
 
   const handleScrollDown = () => {
     window.scrollTo({
-      top: window.innerHeight,
+      top: 1000,
       behavior: "smooth",
     });
   };
@@ -1059,13 +986,18 @@ export default function LandingPage() {
       
       <main>
         <HeroSection 
-          onPlayClick={handlePlayClick}
           onScrollDown={handleScrollDown}
         />
+
+        <TitleExplained/>
         
         <GameShowcaseSection />
+
+        <GameModesSection/>
+
+        <HUDElements/>
         
-        <HowToPlaySection />
+        {/* <HowToPlaySection />*/}
 
         <LiveLeaderboardSection />
         

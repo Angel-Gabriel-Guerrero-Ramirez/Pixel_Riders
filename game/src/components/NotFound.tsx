@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from 'react-router-dom';
-import { Home, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import styles from '../styles/gameStyle.module.css'
 
 interface ArcadeButtonProps {
@@ -138,7 +138,6 @@ function Starfield() {
             backgroundColor: star.color,
             opacity: star.opacity,
             animationDelay: `${star.animationDelay}s`,
-            boxShadow: `0 0 ${star.size * 2}px ${star.color}`,
             willChange: "top",
           }}
         />
@@ -201,10 +200,6 @@ export default function PageNotFound() {
           style={{
             borderColor: '#ff006e',
             backgroundColor: 'rgba(10, 14, 39, 0.9)',
-            boxShadow: `
-              0 0 60px rgba(255, 0, 110, 0.4),
-              inset 0 0 40px rgba(0, 247, 255, 0.1)
-            `,
           }}
         >
           {/* Efecto de esquinas pixeladas */}
@@ -232,12 +227,6 @@ export default function PageNotFound() {
                 className={`${styles.pixelFont} text-5xl md:text-7xl lg:text-8xl mb-2`}
                 style={{
                   color: '#ff006e',
-                  textShadow: `
-                    0 0 20px #ff006e,
-                    0 0 40px #ff006e,
-                    2px 2px 0px #00f7ff,
-                    4px 4px 0px #b100ff
-                  `,
                 }}
               >
                 4
@@ -250,10 +239,6 @@ export default function PageNotFound() {
               <div 
                 className={`${styles.pixelFont} absolute top-0 left-0 w-full h-full animate-glitch opacity-70 delay-100 `}
                 style={{
-                  textShadow: `
-                    -2px 0 #b100ff,
-                    2px 0 #00f7ff
-                  `,
                   clipPath: 'inset(50% 0 0 0)',
                 }}
               >
@@ -266,7 +251,6 @@ export default function PageNotFound() {
               className={`${styles.pixelFont} text-xl md:text-2xl mb-6 tracking-wider `}
               style={{
                 color: '#00f7ff',
-                textShadow: '0 0 10px #00f7ff',
               }}
             >
               GAME OVER - PAGE NOT FOUND
@@ -302,7 +286,6 @@ export default function PageNotFound() {
                 showArrow={false}
                 className={`${styles.pixelFont} min-w-[200px]`}
               >
-                <Home className="w-5 h-5" />
                 RETURN TO HOME BASE
               </ArcadeButton>
             </div>

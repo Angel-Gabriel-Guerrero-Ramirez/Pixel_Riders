@@ -15,7 +15,7 @@ const config = new AptosConfig({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AptosWalletAdapterProvider
-    autoConnect={true}
+    autoConnect={false}
     dappConfig={config}
     optInWallets={["Nightly", "Petra", "Pontem Wallet", "Gate Wallet"]}
     onError={(error) => {console.log("error", error);}}
